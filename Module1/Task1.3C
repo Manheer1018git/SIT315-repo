@@ -1,0 +1,57 @@
+// C++ code
+// three actuators in the form of LEDs are used, a tiltswitch and a slideswitch are used as the sensors
+int LED1 = 13;
+int LED2 = 7;
+int LED3 = 4;
+int SlideSwitch = 2;
+int TiltSwitch = 3;
+
+void setup()
+{
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(SlideSwitch, INPUT);
+  pinMode(TiltSwitch, INPUT);
+  attachInterrupt(digitalPinToInterrupt(SlideSwitch), SlideSwitchChange, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(TiltSwitch), TiltSwitchChange, CHANGE);
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  delay(200);
+}
+
+void SlideSwitchChange()
+{
+  // if the slideswitch is on, the LED1 is turned on and the LED2 is off
+  if (digitalRead(SlideSwitch)){
+    digitalWrite(LED1, HIGH);
+    digitalWrite(LED2, LOW);
+    Serial.println("SlideSwitchON : LED1 is ON");
+    Serial.println();
+  }
+  else {
+    // if the slideswitch is off, the LED2 is turned on and the LED1 is off
+    digitalWrite(LED1, LOW);
+    digitalWrite(LED2, HIGH);
+    Serial.println("SlideSwitchOFF : LED2 is ON");
+    Serial.println();
+  }
+}
+
+void TiltSwitchChange()
+{
+  // if the Tiltswitch is on, the LED3 is turned on 
+  if (digitalRead(TiltSwitch)){
+    digitalWrite(LED3, HIGH);
+    Serial.println("TiltSwitchON : LED3 is ON");
+    Serial.println();
+  }
+  else {
+    // if the Tiltswitch is off, the LED3 is turned off
+    digitalWrite(LED3, LOW);
+    Serial.println("TiltSwitchOFF : LED3 is OFF");
+    Serial.println();
+  }
+}
