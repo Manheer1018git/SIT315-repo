@@ -1,0 +1,99 @@
+// C++ code
+// three actuators in the form of LEDs are used, a tiltswitch and a slideswitch are used as the sensors
+const int LED1 = 12; // this LED is used as the actuator the slide switch
+const int LED2 = 11; // this LED is used as the actuator the slide switch
+const int LED3 = 10; // this LED is used as the actuator the tilt switch
+const int LED4 = 9; // this LED is used as the actuator the timer event
+const int LED5 = 8; // this LED is used as the actuator the push button
+
+boolean toggle1 = 0; // this is used as the timer event's trigger to make it blink
+
+void setup()
+{
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
+  pinMode(LED4, OUTPUT);
+  pinMode(LED5, OUTPUT);
+  Serial.begin(9600);
+  
+  // Pin change interrupts (PCINT)
+  PCICR = 0b00000100; // this register turns the port D on for the use of interrupts
+  PCMSK2 = 0b00011100; // this turns the arduino pins 4, 3 and 2 on for use of interrupts in the port D
+  
+  // we clear the timer registers
+  TCCR1A = 0;
+  TCCR1B = 0;
+  TCNT1 = 0;
+  
+  TCCR1B |= (1 << WGM12); // we turn on the CTC mode
+  TCCR1B |= (1 << CS12) | (1 << CS10); // we set the prescaler 
+  
+  // we set the compare match register to make the LED blink in every 2 second interrupts
+  OCR1A = 2 * 16000000 / 1024 - 1;
+  
+  // we Enable Timer1 output to compare interrupt
+  TIMSK1 |= (1 << OCIE1A);
+}
+
+void loop()
+{
+  delay(200);
+}
+
+
+// ISR for the PCINT
+ISR(PCINT2_vect)
+{
+  // if the slideswitch is on, the LED1 is turned on and the LED2 is off
+  if (digitalRead(2)){
+    digitalWrite(LED1, HIGH);
+    digitalWrite(LED2, LOW);
+    Serial.println("SlideSwitchON : LED1 is ON");
+    Serial.println();
+  }
+  else {
+    // if the slideswitch is off, the LED2 is turned on and the LED1 is off
+    digitalWrite(LED1, LOW);
+    digitalWrite(LED2, HIGH);
+    Serial.println("SlideSwitchOFF : LED2 is ON");
+    Serial.println();
+  }
+  
+  // if the Tiltswitch is on, the LED3 is turned on 
+  if (digitalRead(3)){
+    digitalWrite(LED3, HIGH);
+    Serial.println("TiltSwitchON : LED3 is ON");
+    Serial.println();
+  }
+  else {
+    // if the Tiltswitch is off, the LED3 is turned off
+    digitalWrite(LED3, LOW);
+  }
+  
+  // if the PushButton is on, the LED4 is turned on 
+  if (digitalRead(4)){
+    digitalWrite(LED5, HIGH);
+    Serial.println("PushButtonON : LED5 is ON");
+    Serial.println();
+  }
+  else {
+    // if the PushButton is off, the LED5 is turned off
+    digitalWrite(LED5, LOW);
+  }
+}
+
+// ISR for the timer
+ISR(TIMER1_COMPA_vect){
+  // the timer event makes the led blink 
+  // if the LED was off during the clock cycle, we turn it on
+  if (toggle1){
+    digitalWrite(LED4,HIGH);
+    toggle1 = 0;
+  }
+  else{
+    // if the led was on during the clock cycle, we turn it off
+    digitalWrite(LED4,LOW);
+    toggle1 = 1;
+  }
+}
